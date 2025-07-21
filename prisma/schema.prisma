@@ -1,104 +1,67 @@
-generator client {
+generator client{
   provider = "prisma-client-js"
 }
 
-datasource db {
+datasource db{
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+
+model country {
+  countryName String    @id @map("country_name") @db.VarChar(30)
+  language    String    @db.VarChar(30)
+  region      String    @db.VarChar(30)
+  student     student[]
+}
+
 model course {
-  crseCode   String    @id @map("crse_code") @db.VarChar(5)
-  crseName   String    @map("crse_name") @db.VarChar(100)
-  offeredBy  String    @map("offered_by") @db.VarChar(5)
-  crseFee    Decimal   @map("crse_fee") @db.Decimal(7, 2)
-  labFee     Decimal?  @map("lab_fee") @db.Decimal(7, 2)
+  crseCode  String   @id @map("crse_code") @db.VarChar(5)
+  crseName  String   @map("crse_name") @db.VarChar(100)
+  offeredBy String   @map("offered_by") @db.VarChar(5)
+  crseFee   Decimal  @map("crse_fee") @db.Decimal(7, 2)
+  labFee    Decimal? @map("lab_fee") @db.Decimal(7, 2)
 
-  students student[] @relation("student_crse_code_fk")
-  department department @relation("departmentCourse", fields: [offeredBy], references: [deptCode], onDelete: NoAction, onUpdate: NoAction, map: "fk_course_offered_by")
+  student    student[]
+  department department @relation(fields: [offeredBy], references: [deptCode], onDelete: NoAction, onUpdate: NoAction, map: "course_offered_by_fk")
 }
-
-model staff_dependent {
-  staff_no        String @db.Char(4)
-  dependent_name  String @db.VarChar(30)
-  relationship    String @db.VarChar(20)
-
-  staff staff @relation(fields: [staff_no], references: [staffNo], onDelete: NoAction, onUpdate: NoAction, map: "staff_dependent_staff_no_fk")
-
-  @@id([staff_no, dependent_name])
-  @@map("staff_dependent")
-}
-
-
-
-
-model pre_requisite{
-  mod_code  String  @db.VarChar(10)
-  requisite String  @db.VarChar(10)
-// Relation to module.modCode (mod_code → module)
-  module       module @relation("preRequisiteModCodeToModule", fields: [mod_code], references: [modCode], onDelete: NoAction, onUpdate: NoAction, map: "pre_requisite_mod_code_fk")
-
-  // Relation to module.modCode (requisite → module)
-  prerequisite module @relation("preRequisiteRequisiteToModule", fields: [requisite], references: [modCode], onDelete: NoAction, onUpdate: NoAction, map: "pre_requisite_requisite_fk")
-
-  @@id([mod_code,requisite])
-}
-
-model country{
-  country_name String @id@db.VarChar(30)
-  language String @db.VarChar(30)
-  region String @db.VarChar (30)
-
-  students student[] @relation("student_nationality_fk")
-
-}
-
-model student {
-  adm_no         String   @id @db.Char(4)
-  stud_name      String   @db.VarChar(30)
-  gender         String   @db.Char(1)
-  address        String   @db.VarChar(100)
-  mobile_phone   String   @db.Char(8)
-  home_phone     String   @db.Char(8)
-  dob            DateTime
-  nationality    String   @db.VarChar(30)
-  crse_code      String   @db.VarChar(5)
-
-  // Relations
-  modPerformances stud_mod_performance[] // link to performance
-  course   course  @relation("student_crse_code_fk", fields: [crse_code], references: [crseCode], onDelete: NoAction, onUpdate: NoAction, map: "student_crse_code_fk")
-  country  country @relation("student_nationality_fk", fields: [nationality], references: [country_name], onDelete: NoAction, onUpdate: NoAction, map: "student_nationality_fk")
-}
-
-model stud_mod_performance {
-  adm_no         String @db.Char(4)
-  mod_registered String @db.VarChar(10)
-  mark           Int
-  grade          String @db.Char(2)
-
-  //  Relationships
-  student student @relation(fields: [adm_no], references: [adm_no], onDelete: NoAction, onUpdate: NoAction, map: "stud_mod_performance_adm_no_fk")
-  module  module  @relation(fields: [mod_registered], references: [modCode], onDelete: NoAction, onUpdate: NoAction, map: "stud_mod_performance_mod_registered_fk")
-
-  @@id([adm_no, mod_registered])
-  @@map("stud_mod_performance")
-}
-
-
 
 model department {
   deptCode         String    @id @map("dept_code") @db.VarChar(5)
   deptName         String    @map("dept_name") @db.VarChar(100)
-  hod              String    @db.Char(4) @unique
+  hod              String    @db.Char(4)
   noOfStaff        Int?      @map("no_of_staff")
   maxStaffStrength Int?      @map("max_staff_strength")
   budget           Decimal?  @db.Decimal(9, 2)
   expenditure      Decimal?  @db.Decimal(9, 2)
   hodApptDate      DateTime? @map("hod_appt_date") @db.Date
 
-  courses course[] @relation("departmentCourse")
-  departmentHodToStaff      staff   @relation("departmentHodToStaff", fields: [hod], references: [staffNo], onDelete: NoAction, onUpdate: NoAction, map: "dept_hod_fk")
-  staffDeptCodeToDepartment staff[] @relation("staffDeptCodeToDepartment")
+  course                    course[]
+  departmentHodToStaff      staff    @relation("departmentHodToStaff", fields: [hod], references: [staffNo], onDelete: NoAction, onUpdate: NoAction, map: "dept_hod_fk")
+  staffDeptCodeToDepartment staff[]  @relation("staffDeptCodeToDepartment")
+}
+
+model module {
+  modCode    String  @id @map("mod_code") @db.VarChar(10)
+  modName    String  @map("mod_name") @db.VarChar(100)
+  creditUnit Int     @map("credit_unit")
+  modCoord   String? @map("mod_coord") @db.Char(4)
+
+  staff                         staff?               @relation(fields: [modCoord], references: [staffNo], onDelete: NoAction, onUpdate: NoAction, map: "mod_mod_coord_fk")
+  preRequisiteModCodeToModule   preRequisite[]       @relation("preRequisiteModCodeToModule")
+  preRequisiteRequisiteToModule preRequisite[]       @relation("preRequisiteRequisiteToModule")
+  studModPerformance            studModPerformance[]
+}
+
+model preRequisite {
+  modCode   String @map("mod_code") @db.VarChar(10)
+  requisite String @db.VarChar(10)
+
+  preRequisiteModCodeToModule   module @relation("preRequisiteModCodeToModule", fields: [modCode], references: [modCode], onDelete: NoAction, onUpdate: NoAction, map: "pre_requisite_mod_code_fk")
+  preRequisiteRequisiteToModule module @relation("preRequisiteRequisiteToModule", fields: [requisite], references: [modCode], onDelete: NoAction, onUpdate: NoAction, map: "pre_requisite_requisite_fk")
+
+  @@id([modCode, requisite])
+  @@map("pre_requisite")
 }
 
 model staff {
@@ -119,18 +82,11 @@ model staff {
   highestQln        String   @map("highest_qln") @db.VarChar(10)
   designation       String   @db.VarChar(20)
 
-  // One-to-many: one staff → many dependents
-  staffDependent staff_dependent[]
-
-  // One-to-one: staff is HOD of one department (optional)
-  hodOfDepartment department[] @relation("departmentHodToStaff")
-
-  // Many-to-one: staff belongs to one department
-  department department @relation("staffDeptCodeToDepartment", fields: [deptCode], references: [deptCode], onDelete: NoAction, onUpdate: NoAction, map: "staff_dept_code_fk")
-
-  module module[] @relation(map: "mod_mod_coord_fk")
+  module                    module[]
+  staffDependent            staffDependent[]
+  departmentHodTostaff      department[]     @relation("departmentHodToStaff")
+  staffDeptCodeToDepartment department       @relation("staffDeptCodeToDepartment", fields: [deptCode], references: [deptCode], onDelete: NoAction, onUpdate: NoAction, map: "staff_dept_code_fk")
 }
-
 
 model staffBackup {
   staffNo          String   @id @map("staff_no") @db.Char(4)
@@ -153,21 +109,45 @@ model staffBackup {
   @@map("staff_backup")
 }
 
-model module {
-  modCode    String    @id @map("mod_code") @db.VarChar(10)
-  modName    String    @map("mod_name") @db.VarChar(100)
-  creditUnit Int       @map("credit_unit")
-  modCoord   String?   @map("mod_coord") @db.Char(4)
+model staffDependent {
+  staffNo       String @map("staff_no") @db.Char(4)
+  dependentName String @map("dependent_name") @db.VarChar(30)
+  relationship  String @db.VarChar(20)
 
-  // Relation to staff (module coordinator)
-  coordinator staff? @relation(fields: [modCoord],references: [staffNo],map: "mod_mod_coord_fk")
-  modPerformances stud_mod_performance[] // link to performance
+  staff staff @relation(fields: [staffNo], references: [staffNo], onDelete: NoAction, onUpdate: NoAction, map: "staff_dependent_staff_no_fk")
 
-  // Self-referencing many-to-many via pre_requisite table
-  prerequisites     pre_requisite[] @relation("preRequisiteModCodeToModule")
-  isPrerequisiteFor pre_requisite[] @relation("preRequisiteRequisiteToModule")
+  @@id([staffNo, dependentName])
+  @@map("staff_dependent")
 }
 
+model studModPerformance {
+  admNo         String  @map("adm_no") @db.Char(4)
+  modRegistered String  @map("mod_registered") @db.VarChar(10)
+  mark          Int?
+  grade         String? @db.Char(2)
+
+  student student @relation(fields: [admNo], references: [admNo], onDelete: NoAction, onUpdate: NoAction)
+  module  module  @relation(fields: [modRegistered], references: [modCode], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([admNo, modRegistered])
+  @@map("stud_mod_performance")
+}
+
+model student {
+  admNo       String   @id @map("adm_no") @db.Char(4)
+  studName    String   @map("stud_name") @db.VarChar(30)
+  gender      String   @db.Char(1)
+  address     String   @db.VarChar(100)
+  mobilePhone String?  @map("mobile_phone") @db.Char(8)
+  homePhone   String?  @map("home_phone") @db.Char(8)
+  dob         DateTime @db.Date
+  nationality String   @db.VarChar(30)
+  crseCode    String   @map("crse_code") @db.VarChar(5)
+
+  studModPerformance studModPerformance[]
+  course             course               @relation(fields: [crseCode], references: [crseCode], onDelete: NoAction, onUpdate: NoAction, map: "student_crse_code_fk")
+  country            country              @relation(fields: [nationality], references: [countryName], onDelete: NoAction, onUpdate: NoAction, map: "student_nationality_fk")
+}
 
 model userAccount {
   id        Int    @id
@@ -184,4 +164,3 @@ model userRole {
 
   @@map("user_role")
 }
-

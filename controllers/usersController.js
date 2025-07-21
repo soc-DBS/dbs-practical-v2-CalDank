@@ -18,9 +18,10 @@ module.exports.login = function (req, res, next) {
 
     userModel.retrieveByUserAccount(accountNo)
         .then(function (userAccount) {
-            if (!userAccount) {
-                return res.status(401).json({ message: 'Invalid Account Number or password' });
-            }
+      if (!userAccount) {
+    throw { status: 401, message: 'Invalid Account Number or password' };
+}
+
             userData = userAccount;
             return bcrypt.compare(password, userAccount.password);
         })
