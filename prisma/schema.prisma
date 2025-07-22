@@ -23,7 +23,7 @@ model course {
   labFee    Decimal? @map("lab_fee") @db.Decimal(7, 2)
 
   student    student[]
-  department department @relation(fields: [offeredBy], references: [deptCode], onDelete: NoAction, onUpdate: NoAction, map: "course_offered_by_fk")
+ department department @relation(fields: [offeredBy], references: [deptCode], onDelete: NoAction, onUpdate: NoAction, map: "course_offered_by_fk")
 }
 
 model department {
@@ -36,9 +36,9 @@ model department {
   expenditure      Decimal?  @db.Decimal(9, 2)
   hodApptDate      DateTime? @map("hod_appt_date") @db.Date
 
-  course                    course[]
-  departmentHodToStaff      staff    @relation("departmentHodToStaff", fields: [hod], references: [staffNo], onDelete: NoAction, onUpdate: NoAction, map: "dept_hod_fk")
-  staffDeptCodeToDepartment staff[]  @relation("staffDeptCodeToDepartment")
+ course                    course[]
+ departmentHodToStaff      staff    @relation("departmentHodToStaff", fields: [hod], references: [staffNo], onDelete: NoAction, onUpdate: NoAction, map: "dept_hod_fk")
+ staffDeptCodeToDepartment staff[]  @relation("staffDeptCodeToDepartment")
 }
 
 model module {
@@ -84,8 +84,8 @@ model staff {
 
   module                    module[]
   staffDependent            staffDependent[]
-  departmentHodTostaff      department[]     @relation("departmentHodToStaff")
-  staffDeptCodeToDepartment department       @relation("staffDeptCodeToDepartment", fields: [deptCode], references: [deptCode], onDelete: NoAction, onUpdate: NoAction, map: "staff_dept_code_fk")
+ departmentHodTostaff      department[]     @relation("departmentHodToStaff")
+ staffDeptCodeToDepartment department       @relation("staffDeptCodeToDepartment", fields: [deptCode], references: [deptCode], onDelete: NoAction, onUpdate: NoAction, map: "staff_dept_code_fk")
 }
 
 model staffBackup {
